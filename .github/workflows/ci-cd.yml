@@ -2,7 +2,6 @@ name: CI-CD Pipeline
 
 permissions:
   contents: read
-  packages: write
 
 on:
   push:
@@ -15,7 +14,7 @@ env:
   IMAGE_NAME: ca2-ci-cd-api
 
 jobs:
-  test-build-publish-deploy:
+  test-build-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -36,30 +35,6 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t $IMAGE_NAME:${{ github.sha }} -t $IMAGE_NAME:latest .
-
-      - name: Log in to GitHub Container Registry
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Tag image for GHCR
-        if: github.event_name != 'pull_request'
-        run: |
-          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_REPO=ghcr.io/$OWNER_LC/$IMAGE_NAME
-          docker tag $IMAGE_NAME:${{ github.sha }} $IMAGE_REPO:${{ github.sha }}
-          docker tag $IMAGE_NAME:latest $IMAGE_REPO:latest
-
-      - name: Push image to GHCR
-        if: github.event_name != 'pull_request'
-        run: |
-          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_REPO=ghcr.io/$OWNER_LC/$IMAGE_NAME
-          docker push $IMAGE_REPO:${{ github.sha }}
-          docker push $IMAGE_REPO:latest
 
       - name: Deploy to cloud platform (Render deploy hook)
         if: github.event_name != 'pull_request' && env.RENDER_DEPLOY_HOOK_URL != ''
