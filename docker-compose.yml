@@ -1,0 +1,10 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ca2-api
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
